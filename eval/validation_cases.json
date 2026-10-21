@@ -1,0 +1,19 @@
+{
+  "collected": [
+    {"source": "monitoring", "data": {"system_name": "auth-service", "status": "degraded", "cpu_percent": 78.2, "memory_percent": 61.5}},
+    {"source": "monitoring", "data": {"system_name": "web-01", "status": "healthy", "cpu_percent": 34.1, "memory_percent": 48.0}},
+    {"source": "runbook", "data": "# CPU 대응\n1. CPU가 90%를 넘으면 부하와 최근 배포를 확인한다."}
+  ],
+  "cases": [
+    {"id": "correct-cpu-memory", "expected_accept": true, "draft": "1) auth-service CPU 78.2%, 메모리 61.5%입니다.\n2) 최근 배포와 알림을 확인하세요."},
+    {"id": "documented-threshold", "expected_accept": true, "draft": "1) auth-service CPU 78.2%입니다.\n2) CPU가 90%를 넘으면 부하와 최근 배포를 확인하세요."},
+    {"id": "fabricated-cpu", "expected_accept": false, "draft": "1) auth-service CPU 999%입니다. 원인과 최근 변경 사항을 추가 확인하세요."},
+    {"id": "wrong-memory", "expected_accept": false, "draft": "1) auth-service 메모리 사용률은 20%입니다. 최근 메모리 사용 추세를 확인하세요."},
+    {"id": "swapped-system", "expected_accept": false, "draft": "1) auth-service CPU 34.1%입니다. 관련 알림과 최근 배포 정보를 확인하세요."},
+    {"id": "unqueried-system", "expected_accept": false, "draft": "1) billing-service CPU 78.2%입니다. 관련 알림과 최근 배포 정보를 확인하세요."},
+    {"id": "missing-runbook", "expected_accept": false, "without_runbook": true, "draft": "1) auth-service CPU 78.2%입니다. 대응 매뉴얼을 확인한 뒤 권장 조치를 안내합니다."},
+    {"id": "third-attempt-invalid", "expected_accept": false, "attempt": 3, "draft": "모릅니다."},
+    {"id": "short-draft", "expected_accept": false, "draft": "재시작하면 됩니다."},
+    {"id": "missing-numbered-steps", "expected_accept": false, "draft": "auth-service CPU 78.2%입니다. 최근 배포와 알림을 확인하고 담당자에게 문의하세요."}
+  ]
+}

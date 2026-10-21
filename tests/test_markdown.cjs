@@ -1,0 +1,10 @@
+const assert = require('node:assert/strict');
+const {render} = require('../static/markdown.js');
+assert.match(render('1) 관측 정보\n- CPU **정상**'), /<h3>1\) 관측 정보<\/h3><ul><li>CPU <strong>정상<\/strong>/);
+assert.match(render('| 항목 | 값 |\n| --- | --- |\n| CPU | 10% |'), /<table>.*<td>10%<\/td>/);
+assert.match(render('```html\n<script>alert(1)</script>\n```'), /&lt;script&gt;/);
+assert.doesNotMatch(render('<img src=x onerror=alert(1)>'), /<img/);
+assert.doesNotMatch(render('[실행](javascript:alert(1))'), /href=/);
+assert.match(render('[문서](https://example.com)'), /rel="noopener noreferrer"/);
+assert.match(render('[RB:cpu-spike:1]'), /\[RB:cpu-spike:1\]/);
+console.log('Markdown rendering and injection checks passed (7).');

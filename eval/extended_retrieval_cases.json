@@ -1,0 +1,54 @@
+[
+  {
+    "id": "same-cpu-memory",
+    "query": "payments-service CPU 급증과 메모리 누수가 동시에 발생합니다",
+    "expected": [
+      "cpu-spike",
+      "memory-leak"
+    ]
+  },
+  {
+    "id": "same-memory-disk",
+    "query": "cache-service 힙이 커지고 디스크 공간도 부족합니다",
+    "expected": [
+      "memory-leak",
+      "disk-full"
+    ]
+  },
+  {
+    "id": "same-network-latency",
+    "query": "gateway-service DNS 네트워크 타임아웃과 p95 응답 지연이 있습니다",
+    "expected": [
+      "network-timeout",
+      "high-latency"
+    ]
+  },
+  {
+    "id": "same-cpu-disk",
+    "query": "log-service 연산 CPU 과부하와 저장 공간 부족이 함께 발생합니다",
+    "expected": [
+      "cpu-spike",
+      "disk-full"
+    ]
+  },
+  {
+    "id": "negative-food",
+    "query": "김치찌개 요리 재료와 조리 방법",
+    "expected": []
+  },
+  {
+    "id": "negative-tour",
+    "query": "제주도 여행에서 아름다운 해변 산책 코스",
+    "expected": []
+  },
+  {
+    "id": "negative-language",
+    "query": "영어 문법의 과거완료 시제를 설명해줘",
+    "expected": []
+  },
+  {
+    "id": "negative-no-runbook",
+    "query": "TLS 인증서 만료와 HTTPS 인증서 체인 교체 절차",
+    "expected": []
+  }
+]

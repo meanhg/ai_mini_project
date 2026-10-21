@@ -1,0 +1,164 @@
+[
+  {
+    "component": "dynamic_behavior",
+    "backend": "openai",
+    "role": "natural_followup",
+    "ok": true,
+    "targets": [
+      "cache-service"
+    ],
+    "clarification": "",
+    "route": "incident",
+    "uses_previous": true,
+    "target_resolution": "resolved",
+    "model": "openai:gpt-4o"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "openai",
+    "role": "ambiguous_followup",
+    "ok": true,
+    "targets": [],
+    "clarification": "어떤 시스템을 말씀하시는 건가요? \"cache-service\"와 \"payments-service\" 중 하나를 선택해 주세요.",
+    "route": "incident",
+    "uses_previous": true,
+    "target_resolution": "ambiguous",
+    "model": "openai:gpt-4o"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "openai",
+    "role": "all_previous",
+    "ok": true,
+    "targets": [
+      "cache-service",
+      "payments-service"
+    ],
+    "clarification": "",
+    "route": "incident",
+    "uses_previous": true,
+    "target_resolution": "resolved",
+    "model": "openai:gpt-4o"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "openai",
+    "role": "exclude_target",
+    "ok": true,
+    "targets": [
+      "payments-service"
+    ],
+    "clarification": "",
+    "route": "incident",
+    "uses_previous": false,
+    "target_resolution": "resolved",
+    "model": "openai:gpt-4o-mini"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "openai",
+    "role": "unrelated_chat",
+    "ok": true,
+    "targets": [],
+    "clarification": "",
+    "route": "chat",
+    "uses_previous": false,
+    "target_resolution": "missing",
+    "model": "openai:gpt-4o"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "openai",
+    "role": "new_documents",
+    "ok": true,
+    "queries": [
+      "gateway-service TLS 인증서 만료 문제 해결 방법",
+      "NTP 시간 동기화 오차 해결 방법"
+    ],
+    "documents": [
+      "clock-sync",
+      "tls-renewal"
+    ]
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "ollama",
+    "role": "natural_followup",
+    "ok": true,
+    "targets": [
+      "cache-service"
+    ],
+    "clarification": "",
+    "route": "incident",
+    "uses_previous": true,
+    "target_resolution": "resolved",
+    "model": "ollama:qwen3:8b"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "ollama",
+    "role": "ambiguous_followup",
+    "ok": true,
+    "targets": [],
+    "clarification": "이전 조사 대상 중 어떤 시스템을 확인할지 지정해주세요: cache-service, payments-service",
+    "route": "incident",
+    "uses_previous": true,
+    "target_resolution": "ambiguous",
+    "model": "ollama:qwen3:8b"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "ollama",
+    "role": "all_previous",
+    "ok": true,
+    "targets": [
+      "cache-service",
+      "payments-service"
+    ],
+    "clarification": "",
+    "route": "incident",
+    "uses_previous": true,
+    "target_resolution": "resolved",
+    "model": "ollama:qwen3:8b"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "ollama",
+    "role": "exclude_target",
+    "ok": true,
+    "targets": [
+      "payments-service"
+    ],
+    "clarification": "",
+    "route": "incident",
+    "uses_previous": false,
+    "target_resolution": "resolved",
+    "model": "ollama:qwen3.5:2b"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "ollama",
+    "role": "unrelated_chat",
+    "ok": true,
+    "targets": [],
+    "clarification": "",
+    "route": "chat",
+    "uses_previous": false,
+    "target_resolution": "missing",
+    "model": "ollama:qwen3:8b"
+  },
+  {
+    "component": "dynamic_behavior",
+    "backend": "ollama",
+    "role": "new_documents",
+    "ok": true,
+    "queries": [
+      "TLS 인증서 만료",
+      "NTP 시간 동기화 오차"
+    ],
+    "documents": [
+      "clock-sync",
+      "tls-renewal"
+    ]
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "production-web": {
+    "queries": {
+      "up": "max(up{job=\"node\",instance=\"YOUR_HOST:9100\"})",
+      "cpu_percent": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",instance=\"YOUR_HOST:9100\"}[5m])))",
+      "memory_percent": "100 * (1 - node_memory_MemAvailable_bytes{instance=\"YOUR_HOST:9100\"} / node_memory_MemTotal_bytes{instance=\"YOUR_HOST:9100\"})"
+    }
+  }
+}

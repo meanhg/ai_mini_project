@@ -1,0 +1,12 @@
+.env
+.venv/
+session.db
+__pycache__/
+*.log
+data/rag_index.sqlite3*
+session.db-*
+*.checkpoints.db*
+data/monitoring_history.sqlite3*
+.DS_Store
+*.pyc
+.pytest_cache/

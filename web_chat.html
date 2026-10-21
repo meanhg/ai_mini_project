@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#f2f4f6" />
+<title>Skalagent · 진단 워크스페이스</title>
+<style>
+  :root { color-scheme: light; --bg: #ffffff; --paper: #f2f4f6; --ink: #191f28; --muted: #6b7684; --line: #dfe3e8; --link: #1b64da; --accent: #3182f6; --accent-hover: #1b64da; --on-accent: #ffffff; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; color: var(--ink); background: var(--bg); font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; font-size: 14px; -webkit-font-smoothing: antialiased; }
+  button, input, select { font: inherit; }
+  button, a, select, summary { -webkit-tap-highlight-color: transparent; }
+  button { cursor: pointer; }
+  button:disabled, select:disabled { opacity: .46; cursor: not-allowed; }
+  button, a, input, select, summary { outline-offset: 4px; }
+  :focus-visible { outline: 2px solid var(--accent); }
+  button { border: 0; }
+  a { color: inherit; }
+  .icon { width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .icon-sm { width: 16px; height: 16px; }
+  #app { display: flex; height: 100vh; height: 100dvh; overflow: hidden; background: var(--paper); }
+  [v-cloak] { display: none; }
+  .sidebar { width: 218px; flex: 0 0 218px; background: var(--paper); color: var(--ink); display: flex; flex-direction: column; padding: 15px 20px 12.75px; }
+  .brand { display: flex; align-items: center; text-decoration: none; width: fit-content; }
+  .brand-logo { display: block; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -1px; line-height: 1.2; color: var(--ink); }
+  .new-chat { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: var(--on-accent); width: 100%; height: 30px; margin-top: 17px; border: 1px solid var(--line); border-radius: 9px; padding: 0 12px; font-weight: 500; transition: background .15s; }
+  .new-chat:hover { background: var(--accent-hover); }
+  .nav-caption { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); margin: 34px 12px 12px; }
+  .nav-item { display: flex; align-items: center; width: 100%; gap: 12px; padding: 12px; border-radius: 8px; color: var(--muted); background: transparent; text-align: left; text-decoration: none; font-size: 13px; }
+  .nav-item + .nav-item { margin-top: 6px; }
+  .nav-item.active { background: var(--bg); color: var(--link); }
+  .nav-item:hover { background: var(--bg); }
+  .nav-item .nav-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-left: auto; }
+  .sidebar-bottom { margin-top: auto; padding: 11px 10px 0; border-top: 1px solid var(--line); }
+  .connection { display: flex; align-items: center; justify-content: center; gap: 16px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--paper); flex: 0 0 auto; }
+  .dot.online { background: #22c55e; }
+  .dot.error { background: #f04452; }
+  .shell { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; margin: 7px 7px 7px 0; border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: var(--bg); }
+  .topbar { height: 66px; flex: 0 0 66px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: var(--bg); gap: 12px; }
+  .breadcrumb { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; }
+  .breadcrumb strong { font-weight: 550; color: var(--muted); }
+  .topbar-tag { font-size: 11px; display: flex; align-items: center; gap: 7px; color: var(--muted); }
+  .workspace { padding: 19.5px 24px 16.5px; display: flex; flex-direction: column; flex: 1; min-height: 0; gap: 13.5px; max-width: 1600px; width: 100%; margin: 0 auto; }
+  .heading-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; }
+  .eyebrow { font-size: 10px; letter-spacing: 1.8px; font-weight: 650; color: var(--muted); margin: 0 0 8px; }
+  h1 { font-size: 26px; line-height: 1.35; letter-spacing: -1.1px; font-weight: 700; margin: 0; }
+  .heading-description { font-size: 12px; color: var(--muted); margin: 9px 0 0; line-height: 1.65; }
+  .workspace-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; color: var(--muted); white-space: nowrap; }
+  .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10.5px; }
+  .quick-card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 17px 20px; display: flex; align-items: center; gap: 16px; text-align: left; color: var(--ink); min-width: 0; transition: border-color .15s, transform .15s; }
+  .quick-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .quick-card.primary { background: var(--paper); border-color: var(--line); }
+  .quick-icon { width: 43px; height: 43px; display: grid; place-items: center; background: var(--paper); border-radius: 12px; color: var(--muted); }
+  .primary .quick-icon { background: var(--bg); color: var(--link); }
+  .quick-label { color: var(--muted); font-size: 10px; margin-bottom: 5px; }
+  .quick-card strong { font-size: 14px; font-weight: 650; letter-spacing: -.3px; }
+  .quick-card p { font-size: 11px; color: var(--muted); margin: 5px 0 0; line-height: 1.5; }
+  .quick-arrow { margin-left: auto; color: var(--muted); }
+  .toolbar { display: flex; align-items: center; gap: 22px; padding: 13px 18px; border: 1px solid var(--line); background: var(--paper); border-radius: 10px; }
+  .model-field { display: flex; align-items: center; gap: 12px; padding-right: 22px; border-right: 1px solid var(--line); }
+  .field-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  select { border: 0; padding: 5px 26px 5px 5px; color: var(--ink); font-weight: 650; font-size: 12px; background: var(--paper); max-width: 150px; }
+  .toolbar-note { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+  .toolbar-note .icon { color: var(--muted); }
+  .mobile-model-info { display: none; }
+  .content-grid { display: grid; grid-template-columns: minmax(0, 1fr) 246px; gap: 15px; flex: 1; min-height: 0; }
+  .chat-panel { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--paper); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
+  .panel-heading { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; border-bottom: 1px solid var(--line); gap: 12px; }
+  .panel-title { display: flex; gap: 9px; align-items: center; font-size: 13px; font-weight: 650; }
+  .panel-title .icon { color: var(--muted); width: 17px; height: 17px; }
+  .panel-status { font-size: 10px; color: var(--muted); background: var(--paper); border-radius: 5px; padding: 5px 8px; }
+  #log { flex: 1; min-height: 0; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 13px; scrollbar-width: thin; scrollbar-color: #b0b8c1 transparent; }
+  #log > * { flex-shrink: 0; }
+  .empty-state { margin: auto 0; padding: 10px 0 18px; }
+  .welcome-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--paper); color: var(--muted); margin-bottom: 17px; }
+  .empty-state h2 { font-size: 19px; font-weight: 650; letter-spacing: -.65px; line-height: 1.5; margin: 0; }
+  .empty-state > p { font-size: 12px; color: var(--muted); line-height: 1.8; margin: 9px 0 20px; }
+  .examples { display: grid; gap: 8px; }
+  .example { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); background: var(--paper); border-radius: 8px; text-align: left; color: var(--ink); font-size: 12px; }
+  .example:hover { background: var(--bg); border-color: var(--muted); }
+  .example .icon { color: var(--muted); width: 15px; height: 15px; }
+  .example span { flex: 1; }
+  .row { display: flex; gap: 10px; align-items: flex-start; }
+  .row.user { justify-content: flex-end; margin-top: 5px; }
+  .avatar { width: 27px; height: 27px; display: grid; place-items: center; flex: 0 0 27px; background: var(--paper); color: var(--muted); border-radius: 8px; margin-top: 3px; }
+  .avatar .icon { width: 16px; height: 16px; }
+  .bubble { padding: 12px 15px; border-radius: 10px; font-size: 13px; line-height: 1.85; white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+  .user .bubble { background: var(--bg); color: var(--ink); max-width: 88%; border-bottom-right-radius: 3px; }
+  .agent .bubble { background: var(--paper); padding: 1px 0 10px; flex: 1; }
+  .markdown { white-space: normal; }
+  .markdown p { margin: 8px 0; }
+  .markdown h1, .markdown h2, .markdown h3 { font-size: 14px; margin: 24px 0 9px; letter-spacing: -.35px; color: var(--ink); }
+  .markdown h3:first-child { margin-top: 0; }
+  .markdown strong { color: var(--ink); font-weight: 650; }
+  .markdown ul, .markdown ol { padding-left: 19px; margin: 8px 0; }
+  .markdown li { margin: 8px 0; }
+  .markdown a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+  .markdown code { background: var(--paper); padding: 2px 5px; border-radius: 4px; font-size: 12px; }
+  .markdown pre { overflow-x: auto; padding: 12px; background: var(--paper); border: 1px solid var(--line); white-space: pre; border-radius: 7px; }
+  .table-scroll { overflow-x: auto; }
+  .markdown table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 12px; }
+  .markdown th, .markdown td { border-bottom: 1px solid var(--line); padding: 10px 12px; text-align: left; white-space: nowrap; }
+  .markdown th { background: var(--paper); color: var(--muted); font-size: 11px; font-weight: 550; }
+  .prompt-box, .progress-box { margin-left: 37px; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; font-size: 11px; color: var(--muted); }
+  details > summary { cursor: pointer; user-select: none; padding: 9px 12px; }
+  details > summary:hover { background: var(--paper); }
+  .progress-box { background: var(--paper); }
+  .steps { padding: 1px 13px 12px; line-height: 1.9; }
+  .step::before { content: '· '; color: var(--muted); }
+  .step.done::before { content: '✓ '; color: var(--muted); }
+  .prompt-box pre { margin: 0; padding: 13px; border-top: 1px solid var(--line); max-height: 260px; overflow: auto; background: var(--paper); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; line-height: 1.8; }
+  .source-entry { padding: 10px 13px; border-top: 1px solid var(--line); line-height: 1.8; overflow-wrap: anywhere; }
+  .source-entry strong { display: block; color: var(--muted); font-weight: 550; }
+  .history-more { align-self: center; color: var(--link); background: var(--paper); border: 1px solid var(--line); padding: 8px 14px; border-radius: 6px; font-size: 11px; }
+  .notice { padding: 15px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-size: 12px; line-height: 1.7; }
+  .notice p { margin: 0 0 10px; }
+  .notice button { padding: 7px 11px; background: var(--paper); border: 1px solid var(--line); border-radius: 5px; color: var(--ink); margin-right: 7px; font-size: 11px; }
+  .composer { padding: 15px 20px 12px; border-top: 1px solid var(--line); background: var(--paper); }
+  .input-wrap { display: flex; align-items: center; gap: 9px; background: var(--bg); padding: 7px 8px 7px 13px; border: 1px solid var(--line); border-radius: 9px; }
+  .input-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgb(49 130 246 / 12%); }
+  .input-wrap > .icon { color: var(--muted); width: 17px; height: 17px; }
+  .input-wrap input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; padding: 8px 0; color: var(--ink); font-size: 12px; }
+  input::placeholder { color: var(--muted); }
+  .send { background: var(--accent); color: var(--on-accent); border: 1px solid var(--accent); border-radius: 6px; display: flex; align-items: center; gap: 6px; padding: 10px 12px; font-size: 11px; font-weight: 550; }
+  .send:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .send .icon { width: 14px; height: 14px; }
+  .composer-hint { margin: 8px 2px 0; font-size: 10px; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; }
+  .context-rail { min-height: 0; overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 10.5px; }
+  .info-card { background: var(--paper); border: 1px solid var(--line); border-radius: 11px; padding: 18px; }
+  .card-label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; letter-spacing: .7px; margin-bottom: 16px; }
+  .card-label .icon { width: 15px; height: 15px; }
+  .info-card h3 { font-size: 13px; margin: 0 0 8px; font-weight: 650; letter-spacing: -.2px; }
+  .info-card p { font-size: 11px; color: var(--muted); line-height: 1.8; margin: 0; }
+  .environment-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0 0; font-size: 11px; }
+  .environment-row > span { color: var(--muted); }
+  .environment-row strong { font-size: 10px; font-weight: 550; color: var(--muted); text-align: right; overflow-wrap: anywhere; }
+  .model-name { display: block; font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.8; overflow-wrap: anywhere; }
+  .model-name small { color: var(--muted); margin-right: 5px; font-size: 10px; }
+  .info-divider { border: 0; border-top: 1px solid var(--line); margin: 17px 0; }
+  .data-label { display: inline-block; font-size: 9px; font-weight: 550; padding: 3px 6px; border-radius: 4px; background: var(--paper); color: var(--muted); margin-bottom: 7px; }
+  .data-label.sample { background: var(--paper); color: var(--muted); }
+  .scope-list { margin: 12px 0 0; padding-left: 15px; color: var(--muted); font-size: 11px; line-height: 2; }
+  .rail-footnote { font-size: 10px; color: var(--muted); line-height: 1.8; padding: 0 6px; margin: 0; }
+  .has-conversation .heading-description { display: none; }
+  .has-conversation .workspace { gap: 10.5px; padding-top: 16.5px; }
+  .has-conversation h1 { font-size: 23px; }
+  .has-conversation .eyebrow { margin-bottom: 5px; }
+  .mobile-guide { display: none; }
+  @media (min-width: 1500px) { .workspace { padding-left: 33px; padding-right: 33px; } .content-grid { grid-template-columns: minmax(0, 1fr) 270px; } }
+  @media (max-width: 1150px) { .sidebar { width: 184px; flex-basis: 184px; padding: 13px 15px 11.25px; } .topbar { padding: 0 24px; } .workspace { padding: 16.5px 18px 13.5px; } .content-grid { grid-template-columns: minmax(0, 1fr) 220px; gap: 11.25px; } .info-card { padding: 15px; } .quick-card { padding: 15px; gap: 10px; } .quick-card p { display: none; } }
+  @media (max-width: 980px) { .context-rail { display: none; } .content-grid { grid-template-columns: minmax(0, 1fr); } .mobile-model-info { display: block; margin-left: auto; font-size: 10px; color: var(--muted); max-width: 200px; } .mobile-model-info summary { padding: 0; } .mobile-model-info p { font-size: 10px; line-height: 1.6; } .mobile-guide { display: block; font-size: 11px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--muted); } .mobile-guide p { padding: 0 13px 12px; margin: 0; line-height: 1.8; } .desktop-guide-link { display: none; } }
+  @media (max-width: 640px) { .sidebar { width: 0; flex-basis: 0; padding: 0; overflow: hidden; } .topbar { height: 54px; flex-basis: 54px; padding: 0 16px; } .breadcrumb > span { display: none; } .topbar-tag { font-size: 10px; } .workspace { padding: 13.5px 9.75px 9px; gap: 9px; } .heading-row { align-items: center; } h1, .has-conversation h1 { font-size: 21px; letter-spacing: -.7px; } .heading-description { font-size: 11px; margin-top: 7px; } .workspace-badge { display: none; } .quick-grid { display: none; } .eyebrow { font-size: 9px; margin-bottom: 6px; } .toolbar { gap: 10px; padding: 10px 12px; } .model-field { gap: 8px; padding-right: 10px; } .toolbar-note { display: none; } .mobile-model-info { max-width: 155px; } .panel-heading { padding: 12px 15px; } .panel-heading .mobile-new-chat { display: inline-flex; } #log { padding: 17px 14px; } .empty-state h2 { font-size: 17px; } .empty-state > p { font-size: 11px; } .example { font-size: 11px; padding: 10px; } .composer { padding: 11px 12px 9px; } .input-wrap { padding-left: 10px; } .input-wrap > .icon { display: none; } .input-wrap input { font-size: 12px; } .send { padding: 10px; } .composer-hint span:last-child { display: none; } .bubble { font-size: 12px; } .avatar { display: none; } .prompt-box, .progress-box { margin-left: 0; } .has-conversation .workspace { padding-top: 11.25px; } .mobile-guide { display: none; } }
+  .mobile-new-chat { display: none; padding: 4px 7px; background: transparent; color: var(--muted); font-size: 11px; align-items: center; gap: 4px; }
+  @media (max-height: 760px) and (min-width: 641px) { .workspace { padding-top: 13.5px; gap: 9.75px; } .heading-description { display: none; } .quick-card { padding: 12px 16px; } .quick-icon { width: 36px; height: 36px; } .quick-card p { display: none; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+  @media (max-height: 760px) and (min-width: 641px) {
+    .empty-state { padding: 0; }
+    .welcome-icon { display: none; }
+    .empty-state h2 { font-size: 16px; }
+    .empty-state > p { font-size: 11px; line-height: 1.5; margin: 6px 0 12px; }
+    .example { padding: 8px 12px; }
+  }
+  @media (max-width: 640px) {
+    .sidebar { display: none; }
+    .shell { margin: 4px; border-radius: 14px; }
+    .mobile-guide { display: block; }
+    .empty-state { padding: 0; }
+    .welcome-icon { display: none; }
+    .empty-state > p { margin: 6px 0 13px; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6 3V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4M7 11h3l2-4 2 7 2-3h2"/></symbol>
+  <symbol id="i-stack" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="7" rx="2"/><rect x="4" y="14" width="16" height="7" rx="2"/><path d="M8 6.5h.01M8 17.5h.01M12 6.5h4M12 17.5h4"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5c-3-2-6-2-10-1v15c4-1 7-1 10 1 3-2 6-2 10-1V4c-4-1-7-1-10 1Zm0 0v15"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m8 12 3 3 5-6M12 2l8 4v6c0 5-8 10-8 10S4 17 4 12V6l8-4Z"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"/><rect x="10" y="10" width="4" height="4" rx=".5"/></symbol>
+</defs></svg>
+<div id="app" v-cloak :class="{'has-conversation': log.length}">
+  <aside class="sidebar" aria-label="워크스페이스 메뉴">
+    <a class="brand" href="#workspace" @click.prevent="focusComposer"><span class="brand-logo">Skalagent</span></a>
+    <button class="new-chat" type="button" @click="newChat" :disabled="sending || loading"><svg aria-hidden="true" class="icon icon-sm"><use href="#i-plus"/></svg>새 대화</button>
+    <div class="nav-caption">WORKSPACE</div>
+    <nav>
+      <button type="button" class="nav-item active" @click="focusComposer" aria-current="page"><svg aria-hidden="true" class="icon"><use href="#i-chat"/></svg>진단 채팅<span class="nav-indicator"></span></button>
+      <button type="button" class="nav-item" @click="showExamples" :disabled="sending || loading"><svg aria-hidden="true" class="icon"><use href="#i-grid"/></svg>빠른 질문</button>
+      <a class="nav-item desktop-guide-link" href="#usage-guide"><svg aria-hidden="true" class="icon"><use href="#i-book"/></svg>사용 안내</a>
+    </nav>
+    <div class="sidebar-bottom"><div class="connection"><span class="dot" :class="{online: connectionState === 'connected', error: connectionState === 'error'}"></span>{{ connectionLabel }}</div></div>
+  </aside>
+  <div class="shell">
+    <header class="topbar"><div class="breadcrumb"><span>워크스페이스</span><span>/</span><strong>인시던트 진단</strong></div><div class="topbar-tag"><svg aria-hidden="true" class="icon icon-sm"><use href="#i-check"/></svg>근거 기반 분석</div></header>
+    <main class="workspace" id="workspace">
+      <section v-if="!log.length" class="quick-grid" aria-label="빠른 진단">
+        <button class="quick-card primary" type="button" @click="askExample(examples[2].query)" :disabled="sending || loading"><span class="quick-icon"><svg aria-hidden="true" class="icon"><use href="#i-monitor"/></svg></span><span><span class="quick-label">실제 로컬 지표</span><br><strong>내 PC 상태 확인</strong><p>CPU · 메모리 · 디스크를 실제로 조회해요.</p></span><svg aria-hidden="true" class="icon icon-sm quick-arrow"><use href="#i-arrow"/></svg></button>
+        <button class="quick-card" type="button" @click="askExample(examples[0].query)" :disabled="sending || loading"><span class="quick-icon"><svg aria-hidden="true" class="icon"><use href="#i-stack"/></svg></span><span><span class="quick-label">샘플 시나리오</span><br><strong>서비스 장애 진단해 보기</strong><p>준비된 서비스의 증상과 대응 절차를 확인해요.</p></span><svg aria-hidden="true" class="icon icon-sm quick-arrow"><use href="#i-arrow"/></svg></button>
+      </section>
+      <section class="toolbar" aria-label="분석 설정"><div class="model-field"><label class="field-label" for="backend">답변 모델</label><select id="backend" v-model="backend" @change="updateBackendLabel" :disabled="sending || loading" aria-label="답변 모델"><option value="openai">OpenAI</option><option value="ollama">Ollama · 로컬</option><option value="fake">데모</option></select></div><div class="toolbar-note"><svg aria-hidden="true" class="icon icon-sm"><use href="#i-book"/></svg>{{ ragEnabled ? '매뉴얼 검색을 함께 사용합니다' : '매뉴얼 원문 조회 모드' }}</div><details class="mobile-model-info"><summary>모델 정보 보기</summary><p>{{ backendLabel }}</p></details></section>
+      <div class="content-grid">
+        <section class="chat-panel" aria-label="진단 대화">
+          <div class="panel-heading"><span class="panel-title"><svg aria-hidden="true" class="icon"><use href="#i-chat"/></svg>진단 대화</span><span class="panel-status" role="status">{{ sending ? '분석 중' : loading ? '기록 불러오는 중' : log.length ? '대화 진행 중' : '질문을 기다리고 있어요' }}</span><button type="button" class="mobile-new-chat" @click="newChat" :disabled="sending || loading"><svg aria-hidden="true" class="icon icon-sm"><use href="#i-plus"/></svg>새 대화</button></div>
+          <div id="log" ref="logEl" aria-label="대화 내용" :aria-busy="sending || loading">
+            <p v-if="loading" class="heading-description">저장된 대화를 불러오는 중입니다…</p>
+            <button v-if="nextBefore" class="history-more" @click="loadOlder" :disabled="sending || loading">이전 대화 더 보기</button>
+            <div v-for="run in pendingRuns" :key="run.id" class="notice"><p><strong>중단된 요청이 있어요</strong><br>{{ run.query }}</p><button @click="handleRun(run, 'resume')" :disabled="sending || loading">이어서 실행</button><button @click="handleRun(run, 'discard')" :disabled="sending || loading">종료</button></div>
+            <div v-if="examplesOpen && log.length" class="examples" ref="examplesEl" aria-label="빠른 질문 선택"><button class="example" v-for="example in examples" :key="example.label" @click="askExample(example.query)" :disabled="sending || loading"><span>{{ example.label }}</span><svg aria-hidden="true" class="icon"><use href="#i-arrow"/></svg></button></div>
+            <div v-if="!loading && !log.length" class="empty-state" id="quick-start" ref="examplesEl"><div class="welcome-icon"><svg aria-hidden="true" class="icon"><use href="#i-chat"/></svg></div><h2>어떤 문제를 함께 확인할까요?</h2><p>대상과 증상을 알려주세요.<br>확인된 관측값과 매뉴얼을 바탕으로 다음 점검을 안내합니다.</p><div class="examples"><button class="example" v-for="example in examples" :key="example.label" @click="askExample(example.query)" :disabled="sending || loading"><svg aria-hidden="true" class="icon"><use :href="example.icon"/></svg><span>{{ example.label }}</span><svg aria-hidden="true" class="icon"><use href="#i-arrow"/></svg></button></div></div>
+            <template v-for="item in log" :key="item.id">
+              <div v-if="item.kind === 'user'" class="row user"><div class="bubble">{{ item.text }}</div></div>
+              <details v-else-if="item.kind === 'steps'" class="progress-box" :open="!item.done"><summary>{{ item.done ? '조사 과정 보기' : '조사 중' }}</summary><div class="steps"><div v-for="(step, i) in item.steps" :key="i" class="step" :class="{done: item.done}">{{ step }}</div></div></details>
+              <div v-else-if="item.kind === 'agent'" class="row agent"><div class="avatar" aria-hidden="true"><svg aria-hidden="true" class="icon"><use href="#i-grid"/></svg></div><div class="bubble markdown" v-html="renderMarkdown(item.text)"></div></div>
+              <details v-else-if="item.kind === 'sources'" class="sources prompt-box"><summary>근거 매뉴얼 {{ item.sources.length }}건 보기</summary><div v-for="source in item.sources" :key="source.citation_id + source.system_name" class="source-entry"><strong>{{ source.title }}</strong>[{{ source.citation_id }}] · {{ source.system_name }}<br>{{ source.path }}</div></details>
+              <details v-else-if="item.kind === 'metadata'" class="prompt-box"><summary>실행 정보 보기</summary><pre>{{ item.text }}</pre></details>
+              <details v-else-if="item.kind === 'prompt'" class="prompt-box"><summary>LLM에 전달된 최종 프롬프트 보기</summary><pre>{{ item.text }}</pre></details>
+            </template>
+          </div>
+          <form class="composer" @submit.prevent="onSubmit"><div class="input-wrap"><svg aria-hidden="true" class="icon"><use href="#i-chat"/></svg><input ref="inputEl" v-model="input" autocomplete="off" :disabled="sending || loading" aria-label="장애 증상 또는 질문" maxlength="6000" placeholder="대상과 증상을 입력하세요. 예: local-host 메모리 상태 확인"/><button class="send" type="submit" :disabled="sending || loading || !input.trim()">보내기<svg aria-hidden="true" class="icon"><use href="#i-arrow"/></svg></button></div><p class="composer-hint"><span>조치 실행은 담당자의 확인이 필요합니다.</span><span>Enter로 전송</span></p></form>
+        </section>
+        <aside class="context-rail" aria-label="진단 환경과 사용 안내">
+          <section class="info-card"><div class="card-label"><svg aria-hidden="true" class="icon"><use href="#i-cpu"/></svg>실행 환경</div><h3>{{ backend === 'ollama' ? 'Ollama 로컬 모델' : backend === 'fake' ? '데모 모델' : backend === 'openai' ? 'OpenAI 모델' : '연결 확인 중' }}</h3><p>현재 대화에 사용하는 모델입니다.</p><span class="model-name"><small>해석·계획</small>{{ selectedModels.fast || '확인 중' }}</span><span class="model-name"><small>작성·검증</small>{{ selectedModels.quality || '확인 중' }}</span><hr class="info-divider"><div class="environment-row"><span>매뉴얼 검색</span><strong>{{ ragEnabled ? '사용' : '원문 조회' }}</strong></div><div v-if="ragEnabled" class="environment-row"><span>임베딩</span><strong>{{ embeddingBackend || '확인 중' }}</strong></div><div class="environment-row"><span>백엔드</span><strong>{{ connectionLabel }}</strong></div></section>
+          <section class="info-card" id="usage-guide"><div class="card-label"><svg aria-hidden="true" class="icon"><use href="#i-monitor"/></svg>데이터 안내</div><span class="data-label">실제 측정</span><h3>local-host</h3><p>프로젝트를 실행한 컴퓨터의 CPU·메모리·디스크를 조회합니다.</p><hr class="info-divider"><span class="data-label sample">샘플 시나리오</span><h3>기본 서비스 6종</h3><p>결제·인증·캐시 등 준비된 가상 서비스로 장애 상황을 확인합니다.</p></section>
+          <section class="info-card"><div class="card-label"><svg aria-hidden="true" class="icon"><use href="#i-check"/></svg>분석의 범위</div><h3>확인한 근거를 바탕으로</h3><ul class="scope-list"><li>현재 지표와 관련 매뉴얼 조회</li><li>미확인 항목은 별도 안내</li><li>재시작·설정 변경은 자동 실행하지 않음</li></ul></section>
+          <p class="rail-footnote">질문이 구체적일수록 조사 대상을<br>더 정확하게 파악할 수 있어요.</p>
+        </aside>
+      </div>
+      <details class="mobile-guide"><summary>데이터와 조회 범위 안내</summary><p>local-host는 실제 로컬 지표, 기본 서비스 6종은 샘플입니다. 로그·배포·프로세스 정보는 별도 확인이 필요하며 조치는 자동 실행하지 않습니다.</p></details>
+    </main>
+  </div>
+</div>
+
+<script src="/assets/markdown.js"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script>
+const { createApp, ref, reactive, nextTick, computed } = Vue;
+function renderMarkdown(text) {
+  if (window.OpsMarkdown) return OpsMarkdown.render(text);
+  // 서버 재시작 전 구버전 화면 서버에 접속해도 원문은 계속 표시한다.
+  const element = document.createElement('div');
+  element.textContent = text || '';
+  return element.innerHTML.replace(/\n/g, '<br>');
+}
+
+const STEP_LABELS = {
+  PlanCreated: e => `계획 수립: 할 일 ${e.task_count}가지${e.targets?.length ? ` (시스템: ${e.targets.join(', ')})` : ''}`,
+  GateApplied: e => e.removed_analysis_tasks ? `불필요한 작업 ${e.removed_analysis_tasks}건 제거` : null,
+  EvidenceSearchPlanned: e => e.task_count ? `관련 매뉴얼 조사 계획: ${e.task_count}건` : null,
+  TaskCompleted: e => (e.source === 'monitoring'
+      ? `모니터링 지표 확인 (시스템: ${e.target})`
+      : `대응 매뉴얼(runbook) 조회 (장애유형: ${e.target})`) + (e.retries ? ' (재시도 성공)' : ''),
+  ReplanCheck: e => e.is_sufficient ? null : e.limit_reached
+      ? `근거 ${e.gaps?.length || 0}건 미확보 → 확인된 관측 정보만 안내`
+      : `근거 보완을 위해 추가 조사 (${e.search_count}건)`,
+  DraftWritten: e => `답변 초안 작성 (시도 ${e.attempt})`,
+  EvidenceRetrieved: e => `${e.system_name} 관련 매뉴얼 ${e.sources.length}건 검색 (${e.backend})`,
+  TaskFailed: e => `${e.target}: ${e.message}`,
+  AnalysisCompleted: () => '여러 시스템의 관측 결과 비교 완료',
+  Validation: e => e.accepted ? (e.semantic === 'passed' ? '형식·수치·의미 검증 통과' : '형식·수치 검증 통과')
+      : e.exhausted ? '검증 실패 → 확인된 모니터링 정보만 안내'
+      : '검수 반려 → 다시 작성',
+  Finalize: e => e.verified === false ? '추가 확인이 필요한 결과입니다' : '최종 답변 완성',
+};
+
+createApp({
+  setup() {
+    const backendLabel = ref('all_total_vue');
+    const backend = ref('');
+    const modelOptions = ref({});
+    const connectionState = ref('checking');
+    const ragEnabled = ref(false);
+    const embeddingBackend = ref('');
+    const selectedModels = computed(() => modelOptions.value[backend.value] || {});
+    const connectionLabel = computed(() => ({checking: '연결 확인 중', connected: '서버 연결됨', error: '서버 연결 확인 필요'})[connectionState.value]);
+    let embeddingLabel = '';
+    const log = ref([]);
+    const input = ref('');
+    const sending = ref(false);
+    const loading = ref(true);
+    const pendingRuns = ref([]);
+    const nextBefore = ref(null);
+    const logEl = ref(null);
+    const inputEl = ref(null);
+    const examplesEl = ref(null);
+    const examplesOpen = ref(false);
+    const examples = [
+      {label: 'payments-service CPU 문제 진단', icon: '#i-cpu', query: 'payments-service CPU 급증 원인을 진단해줘'},
+      {label: 'cache-service 메모리 문제 진단', icon: '#i-stack', query: 'cache-service 메모리 사용량이 계속 증가합니다. 대응 절차를 알려줘'},
+      {label: 'local-host 실제 상태 확인', icon: '#i-monitor', query: 'local-host CPU와 메모리 상태를 확인하고 이상 여부를 진단해줘'},
+    ];
+    let thread;
+    try {
+      thread = localStorage.getItem('ops-chat-thread');
+      if (!thread) {
+        thread = 't-web-' + crypto.randomUUID();
+        localStorage.setItem('ops-chat-thread', thread);
+      }
+    } catch {
+      thread = 't-web-' + Math.random().toString(36).slice(2, 12);
+    }
+    let nextId = 0;
+
+    function newChat() {
+      if (sending.value || loading.value) return;
+      thread = 't-web-' + crypto.randomUUID();
+      try { localStorage.setItem('ops-chat-thread', thread); } catch {}
+      log.value = [];
+      pendingRuns.value = [];
+      nextBefore.value = null;
+      input.value = '';
+      examplesOpen.value = false;
+      nextTick(() => {
+        if (logEl.value) logEl.value.scrollTop = 0;
+        inputEl.value?.focus();
+      });
+    }
+    async function focusComposer() {
+      await nextTick();
+      inputEl.value?.focus();
+    }
+    async function showExamples() {
+      if (sending.value || loading.value) return;
+      if (log.value.length) {
+        examplesOpen.value = !examplesOpen.value;
+      }
+      await nextTick();
+      examplesEl.value?.scrollIntoView({block: 'nearest'});
+      examplesEl.value?.querySelector('button')?.focus();
+    }
+    function askExample(query) {
+      examplesOpen.value = false;
+      input.value = query;
+      onSubmit();
+    }
+
+    loadHistory();
+
+    fetch('/health').then(r => { if (!r.ok) throw new Error('health'); return r.json(); }).then(h => {
+      backend.value = h.llm_backend;
+      modelOptions.value = h.backends || {};
+      connectionState.value = h.status === 'ok' ? 'connected' : 'error';
+      ragEnabled.value = Boolean(h.rag_enabled);
+      embeddingBackend.value = h.embedding_backend || '';
+      embeddingLabel = h.rag_enabled ? ` · RAG 검색(${h.embedding_backend})` : '';
+      updateBackendLabel();
+    }).catch(() => { connectionState.value = 'error'; backendLabel.value = '서버 연결을 확인해주세요'; });
+
+    function updateBackendLabel() {
+      const models = modelOptions.value[backend.value] || {};
+      backendLabel.value = (backend.value === 'fake' ? '데모 · 규칙 기반 응답'
+        : `${models.fast || backend.value} / ${models.quality || ''}`) + embeddingLabel;
+    }
+
+    async function scrollToBottom() {
+      await nextTick();
+      if (logEl.value) logEl.value.scrollTop = logEl.value.scrollHeight;
+    }
+
+    function historyItems(messages) {
+      const items = [];
+      for (const message of messages) {
+        items.push({id: nextId++, kind: message.role === 'user' ? 'user' : 'agent', text: message.content});
+        if (message.metadata?.sources?.length) items.push({id: nextId++, kind: 'sources', sources: message.metadata.sources});
+        if (message.role === 'assistant') items.push(...metadataItems(message.metadata || {}));
+      }
+      return items;
+    }
+
+    function metadataItems(meta) {
+      if (!meta.run_id && !meta.usage) return [{id: nextId++, kind: 'metadata', text: '이전 버전의 대화 · 사용량 및 검증 정보 없음'}];
+      const origins = [...new Set((meta.monitoring || []).map(m => `${m.system_name}: ${m.data_origin || 'sample'}`))];
+      const usage = meta.usage || [];
+      const simulated = usage.some(u => u.tokens_are_estimated);
+      const cost = meta.cost_usd == null ? '금액 미산정' : `호출료 추정 $${meta.cost_usd.toFixed(6)} (임베딩·장비 비용 제외)`;
+      const text = [origins.join(' · '), `${meta.llm_backend || ''} · ${meta.tokens || 0} 토큰${simulated ? '(모의 추정)' : ''} · ${cost}`].filter(Boolean).join('\n');
+      return [{id: nextId++, kind: 'metadata', text}];
+    }
+
+    async function loadHistory(before = null) {
+      loading.value = true;
+      try {
+        const response = await fetch(`/sessions/${encodeURIComponent(thread)}/messages` + (before ? `?before=${before}` : ''));
+        if (!response.ok) throw new Error('history');
+        const data = await response.json();
+        const items = historyItems(data.messages);
+        log.value = before ? [...items, ...log.value] : items;
+        pendingRuns.value = data.pending_runs || [];
+        nextBefore.value = data.next_before;
+        if (!before && items.length) scrollToBottom();
+        else if (!before) { await nextTick(); if (logEl.value) logEl.value.scrollTop = 0; }
+      } catch {
+        log.value.push({id: nextId++, kind: 'agent', text: '대화 기록을 불러오지 못했습니다. 연결을 확인한 뒤 새로고침해주세요.'});
+      } finally { loading.value = false; }
+    }
+    function loadOlder() { loadHistory(nextBefore.value); }
+
+    async function refreshPending() {
+      try {
+        const response = await fetch(`/sessions/${encodeURIComponent(thread)}/messages`);
+        if (response.ok) pendingRuns.value = (await response.json()).pending_runs || [];
+      } catch {}
+    }
+    async function handleRun(run, action) {
+      if (sending.value) return;
+      sending.value = true;
+      try {
+        const response = await fetch(`/runs/${encodeURIComponent(run.id)}/${action}?thread_id=${encodeURIComponent(thread)}`, {method: 'POST'});
+        if (!response.ok) throw new Error('run');
+        await loadHistory();
+      } catch {
+        log.value.push({id: nextId++, kind: 'agent', text: '작업을 완료하지 못했습니다. 연결을 확인하고 다시 시도해주세요.'});
+      } finally { sending.value = false; await refreshPending(); }
+    }
+
+    function onSubmit() {
+      const text = input.value.trim();
+      if (!text || sending.value || loading.value) return;
+
+      log.value.push({ id: nextId++, kind: 'user', text });
+      input.value = '';
+      sending.value = true;
+      scrollToBottom();
+
+      const stepsItem = reactive({ id: nextId++, kind: 'steps', steps: [] });
+      log.value.push(stepsItem);
+      scrollToBottom();
+
+      const url = `/chat/stream?message=${encodeURIComponent(text)}&thread_id=${encodeURIComponent(thread)}`
+        + (backend.value ? `&backend=${encodeURIComponent(backend.value)}` : '');
+      const es = new EventSource(url);
+      let streamItem = null;
+
+      es.onmessage = (event) => {
+        if (event.data === '[DONE]') { es.close(); sending.value = false; refreshPending(); return; }
+        let e;
+        try { e = JSON.parse(event.data); } catch { return; }
+        if (e.type === 'Error') {
+          log.value.push({id: nextId++, kind: 'agent', text: e.message});
+          scrollToBottom(); return;
+        }
+
+        if (e.type === 'AnswerToken') {
+          if (!streamItem) {
+            streamItem = reactive({ id: nextId++, kind: 'agent', text: '' });
+            log.value.push(streamItem);
+          }
+          streamItem.text += e.delta;
+          scrollToBottom();
+          return;
+        }
+
+        if (e.type === 'FinalAnswer') {
+          stepsItem.done = true;
+          if (!streamItem) {
+            streamItem = reactive({ id: nextId++, kind: 'agent', text: '' });
+            log.value.push(streamItem);
+          }
+          streamItem.text = e.reply;   // 토큰 합산 결과와 서버의 최종 텍스트를 일치시킨다
+          if (e.metadata) log.value.push(...metadataItems(e.metadata));
+          if (e.prompt) log.value.push({ id: nextId++, kind: 'prompt', text: e.prompt });
+          if (e.sources?.length) log.value.push({ id: nextId++, kind: 'sources', sources: e.sources });
+          streamItem = null;
+          scrollToBottom();
+          return;
+        }
+
+        const fn = STEP_LABELS[e.type];
+        if (!fn) return;
+        const label = fn(e);
+        if (!label) return;
+        stepsItem.steps.push(label);
+        scrollToBottom();
+      };
+
+      es.onerror = () => {
+        es.close(); sending.value = false; refreshPending();
+        log.value.push({ id: nextId++, kind: 'agent',
+          text: '응답 연결이 끊겼습니다. 서버 상태를 확인한 뒤 다시 시도해주세요.' });
+        scrollToBottom();
+      };
+    }
+
+    return { focusComposer, showExamples, inputEl, examplesEl, examplesOpen, connectionState, connectionLabel, ragEnabled, embeddingBackend, selectedModels, renderMarkdown, backendLabel, backend, updateBackendLabel, log, input, sending, loading, pendingRuns, nextBefore, loadOlder, handleRun, logEl, onSubmit, newChat, examples, askExample };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

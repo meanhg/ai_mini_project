@@ -1,0 +1,45 @@
+{
+  "max_research_rounds": 1,
+  "max_validation_attempts": 3,
+  "max_search_queries": 4,
+  "max_search_results": 5,
+  "max_results_per_query": 3,
+  "max_selected_steps": 6,
+  "chunk_chars": 1600,
+  "query_cache_size": 64,
+  "history_messages": 12,
+  "history_chars": 12000,
+  "warning_thresholds": {
+    "cpu_percent": 85.0,
+    "memory_percent": 85.0,
+    "disk_percent": 85.0
+  },
+  "system_thresholds": {},
+  "report_sections": [
+    {
+      "title": "진단 요약",
+      "content": [
+        "diagnosis"
+      ]
+    },
+    {
+      "title": "측정값",
+      "content": [
+        "observations"
+      ]
+    },
+    {
+      "title": "권장 조치",
+      "content": [
+        "actions"
+      ]
+    },
+    {
+      "title": "추가 확인·조회 한계",
+      "content": [
+        "checks",
+        "limitations"
+      ]
+    }
+  ]
+}

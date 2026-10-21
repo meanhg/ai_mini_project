@@ -1,0 +1,14 @@
+[
+  {"id":"cpu", "query":"결제 처리가 밀리고 연산 자원을 거의 다 쓰고 있습니다", "expected":["cpu-spike"], "monitors":[{"system_name":"payments-service","status":"degraded","alerts":["CPU 96% after deployment"]}]},
+  {"id":"memory", "query":"캐시 프로세스가 오래 켜져 있을수록 힙이 커지고 OOM이 납니다", "expected":["memory-leak"], "monitors":[{"system_name":"cache-service","status":"degraded","alerts":["heap allocation rising over 6 hours"]}]},
+  {"id":"disk", "query":"로그 파일을 더 이상 쓸 수 없고 남은 저장 공간이 없습니다", "expected":["disk-full"], "monitors":[{"system_name":"log-service","status":"degraded","alerts":["disk usage 98% on /var/log"]}]},
+  {"id":"latency", "query":"인증 요청이 응답은 하지만 대기 시간이 길고 연결 풀이 포화 상태입니다", "expected":["high-latency"], "monitors":[{"system_name":"auth-service","status":"degraded","alerts":["p95 latency 2.4s, connection pool 92% used"]}]},
+  {"id":"network", "query":"게이트웨이에서 업스트림 호출이 끊기고 패킷이 유실됩니다", "expected":["network-timeout"], "monitors":[{"system_name":"gateway-service","status":"degraded","alerts":["upstream timeout and packet loss"]}]},
+  {"id":"db", "query":"데이터베이스에 연결할 수 없고 장애 조치와 복제 상태 점검이 필요합니다", "expected":["db-down"], "monitors":[{"system_name":"auth-service","status":"down","alerts":["database unavailable; replica disconnected"]}]},
+  {"id":"cpu-memory", "query":"결제 CPU 포화와 캐시 메모리 증가가 함께 발생했습니다", "expected":["cpu-spike","memory-leak"], "monitors":[{"system_name":"payments-service","status":"degraded","alerts":["CPU saturated 97%"]},{"system_name":"cache-service","status":"degraded","alerts":["memory climbing, heap near limit"]}]},
+  {"id":"disk-network", "query":"로그 저장 공간 부족과 게이트웨이 통신 끊김을 각각 확인해주세요", "expected":["disk-full","network-timeout"], "monitors":[{"system_name":"log-service","status":"degraded","alerts":["disk full, writes failed"]},{"system_name":"gateway-service","status":"degraded","alerts":["upstream timeout, network packet loss"]}]},
+  {"id":"cpu-latency", "query":"결제 서비스 연산 자원 과부하와 인증 요청 지연이 동시에 발생합니다", "expected":["cpu-spike","high-latency"], "monitors":[{"system_name":"payments-service","status":"degraded","alerts":["CPU 95% after batch job"]},{"system_name":"auth-service","status":"degraded","alerts":["p95 latency 3.2s, pool exhausted"]}]},
+  {"id":"memory-disk", "query":"캐시 힙이 늘고 로그 볼륨에도 여유 공간이 없습니다", "expected":["memory-leak","disk-full"], "monitors":[{"system_name":"cache-service","status":"degraded","alerts":["heap growing continuously"]},{"system_name":"log-service","status":"degraded","alerts":["disk space low"]}]},
+  {"id":"paraphrase-memory", "query":"사용자를 처리할 때마다 객체가 남아 프로세스 크기가 계속 불어납니다", "expected":["memory-leak"], "monitors":[{"system_name":"cache-service","status":"degraded","alerts":["resident set grows; objects retained after each request"]}]},
+  {"id":"paraphrase-network", "query":"이름 해석이 실패하고 방화벽 변경 이후 다른 서버에 도달하지 못합니다", "expected":["network-timeout"], "monitors":[{"system_name":"gateway-service","status":"degraded","alerts":["DNS resolution failure; packets dropped after firewall change"]}]}
+]

@@ -1,0 +1,98 @@
+{
+  "summary": {
+    "case_count": 10,
+    "before_correct": 4,
+    "after_correct": 10,
+    "note": "수동 작성한 고정 사례의 회귀 평가이며 실제 모델 정확도나 학습 효과를 의미하지 않습니다."
+  },
+  "cases": [
+    {
+      "id": "correct-cpu-memory",
+      "expected_accept": true,
+      "before_accept": true,
+      "after_accept": true,
+      "errors": []
+    },
+    {
+      "id": "documented-threshold",
+      "expected_accept": true,
+      "before_accept": true,
+      "after_accept": true,
+      "errors": []
+    },
+    {
+      "id": "fabricated-cpu",
+      "expected_accept": false,
+      "before_accept": true,
+      "after_accept": false,
+      "errors": [
+        "auth-service의 CPU 999%는 수집된 측정값과 일치하지 않습니다."
+      ]
+    },
+    {
+      "id": "wrong-memory",
+      "expected_accept": false,
+      "before_accept": true,
+      "after_accept": false,
+      "errors": [
+        "auth-service의 메모리 20%는 수집된 측정값과 일치하지 않습니다."
+      ]
+    },
+    {
+      "id": "swapped-system",
+      "expected_accept": false,
+      "before_accept": true,
+      "after_accept": false,
+      "errors": [
+        "auth-service의 CPU 34.1%는 수집된 측정값과 일치하지 않습니다."
+      ]
+    },
+    {
+      "id": "unqueried-system",
+      "expected_accept": false,
+      "before_accept": true,
+      "after_accept": false,
+      "errors": [
+        "billing-service의 CPU 78.2%는 수집된 측정값과 일치하지 않습니다."
+      ]
+    },
+    {
+      "id": "missing-runbook",
+      "expected_accept": false,
+      "before_accept": true,
+      "after_accept": false,
+      "errors": [
+        "유효한 대응 매뉴얼이 없습니다. 추가 확인이 필요합니다."
+      ]
+    },
+    {
+      "id": "third-attempt-invalid",
+      "expected_accept": false,
+      "before_accept": true,
+      "after_accept": false,
+      "errors": [
+        "응답을 30자 이상으로 구체적으로 작성하세요.",
+        "대응 절차를 1) 2) 3) 번호 형식으로 작성하세요."
+      ]
+    },
+    {
+      "id": "short-draft",
+      "expected_accept": false,
+      "before_accept": false,
+      "after_accept": false,
+      "errors": [
+        "응답을 30자 이상으로 구체적으로 작성하세요.",
+        "대응 절차를 1) 2) 3) 번호 형식으로 작성하세요."
+      ]
+    },
+    {
+      "id": "missing-numbered-steps",
+      "expected_accept": false,
+      "before_accept": false,
+      "after_accept": false,
+      "errors": [
+        "대응 절차를 1) 2) 3) 번호 형식으로 작성하세요."
+      ]
+    }
+  ]
+}
