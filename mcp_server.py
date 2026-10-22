@@ -11,7 +11,6 @@ FastAPI 백엔드(server.py)가 lifespan에서 이 파일을 subprocess(stdio)�
 import json
 
 from fastmcp import FastMCP
-from agent.rag import RunbookIndex
 from agent.settings import runbook_directory
 
 mcp = FastMCP(name="capstone-all-total-ops")
@@ -22,6 +21,7 @@ _rag_index = None
 @mcp.tool()
 async def search_runbooks(query: str, top_k: int = 1, queries: list[str] | None = None) -> dict:
     """장애 증상·알림과 의미가 가까운 런북을 벡터 검색합니다. 본문·출처·점수를 반환합니다."""
+    from agent.rag import RunbookIndex  # 향후 RAG 확장을 명시적으로 켠 경우에만 사용
     global _rag_index
     if _rag_index is None:
         _rag_index = RunbookIndex()
@@ -48,7 +48,10 @@ def get_incident_runbook(incident_type: str) -> str:
 @mcp.prompt()
 def incident_analysis_prompt(system_name: str, symptom: str) -> str:
     """장애 진단 표준 절차 프롬프트 — planning 노드가 계획을 세울 때 이 절차를 따른다."""
-    titles = list(dict.fromkeys(c['title'] for c in RunbookIndex().chunks()))
+    titles = [p.read_text(encoding='utf-8').splitlines()[0].lstrip('# ').strip()
+              for p in sorted(runbook_directory().glob('*'))
+              if p.is_file() and p.suffix.lower() in ('.md', '.txt')
+              and p.read_text(encoding='utf-8').strip()]
     return f"""다음 장애에 대해 표준 진단 절차를 수행하세요.
 
 ## 현재 조회 가능한 매뉴얼 제목 (폴더에서 동적으로 읽음)

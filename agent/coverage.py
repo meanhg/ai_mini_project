@@ -28,7 +28,7 @@ def evidence_gaps(state):
             if item.get('source') == 'retrieval_status' and item.get('system_name') == target:
                 for row in item.get('data', []):
                     results.setdefault(row['query'], set()).update(row.get('citations', []))
-        if os.getenv('RAG_ENABLED', 'true').lower() != 'true':
+        if os.getenv('RAG_ENABLED', 'false').lower() != 'true':
             continue  # 비검색 모드는 현재 문서를 전부 읽고 작성·의미 검증 단계에서 선택한다.
         for query in queries | set(results):
             if not results.get(query, set()) & citations:

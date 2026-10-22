@@ -5,6 +5,8 @@
 """
 import math
 import re
+from .documents import REPORT_ERROR_PREFIX
+from .response_policy import concise_status
 
 _METRIC = re.compile(
     r"(?P<metric>CPU|메모리|memory|힙|heap|디스크|disk)\s*"
@@ -23,6 +25,10 @@ def valid_runbook(data: object) -> bool:
 
 
 def validate_draft(draft: str, collected: list[dict]) -> list[str]:
+    # 보고서 조립이 거부된 이유를 그대로 재작성 모델에 전달한다.
+    # 오류 안내를 보고서로 검사하면 번호·출처 오류로 원인이 덮인다.
+    if draft.startswith(REPORT_ERROR_PREFIX):
+        return [draft[len(REPORT_ERROR_PREFIX):]]
     draft = draft.replace('**', '').replace('`', '')
     errors = []
     if len(draft.strip()) < 30:
@@ -46,7 +52,7 @@ def validate_draft(draft: str, collected: list[dict]) -> list[str]:
         errors.append("유효한 대응 매뉴얼이 없습니다. 추가 확인이 필요합니다.")
     provided = {c['citation_id'] for c in collected if c.get('citation_id')}
     cited = set(re.findall(r'\[(RB:[a-z0-9-]+:\d+)\]', draft))
-    if provided and not (provided & cited):
+    if provided and not (provided & cited) and not concise_status(collected):
         errors.append('대응 절차에 제공된 [RB:문서:청크] 출처를 인용하세요.')
     if cited - provided:
         errors.append('조회하지 않은 문서 출처를 인용했습니다. 제공된 출처만 사용하세요.')

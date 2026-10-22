@@ -2,6 +2,8 @@
 import re
 import hashlib
 
+REPORT_ERROR_PREFIX = "보고서 생성 오류: "
+
 
 def citation_name(name):
     return name if re.fullmatch(r'[a-z0-9-]+', name) else hashlib.sha256(name.encode()).hexdigest()[:16]

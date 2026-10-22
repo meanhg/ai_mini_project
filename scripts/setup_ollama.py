@@ -26,8 +26,10 @@ def main():
         raise RuntimeError('ollama가 설치되어 있지 않습니다.')
     base = os.getenv('OLLAMA_BASE_URL', 'http://127.0.0.1:11434').rstrip('/')
     models = list(dict.fromkeys([os.getenv('OLLAMA_FAST_MODEL', 'qwen3.5:2b'),
-        os.getenv('OLLAMA_QUALITY_MODEL', 'qwen3:8b'),
-        os.getenv('OLLAMA_EMBEDDING_MODEL', 'qwen3-embedding:0.6b')]))
+        os.getenv('OLLAMA_QUALITY_MODEL', 'qwen3:8b')]))
+    if (os.getenv('RAG_ENABLED', 'false').lower() == 'true'
+            and os.getenv('RAG_EMBEDDING_BACKEND', 'ollama') == 'ollama'):
+        models.append(os.getenv('OLLAMA_EMBEDDING_MODEL', 'qwen3-embedding:0.6b'))
     env = {**os.environ, 'OLLAMA_HOST': base}
     child = None
     try:

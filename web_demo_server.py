@@ -19,21 +19,18 @@ import httpx
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 BACKEND = os.getenv('BACKEND_URL', 'http://127.0.0.1:8100').rstrip('/')
 HERE = Path(__file__).parent
 
 app = FastAPI()
+app.mount('/assets', StaticFiles(directory=HERE / 'static'), name='assets')
 
 
 @app.get("/")
 async def index():
     return FileResponse(HERE / "web_chat.html")
-
-
-@app.get('/assets/markdown.js')
-async def markdown_script():
-    return FileResponse(HERE / 'static/markdown.js', media_type='text/javascript')
 
 
 @app.get("/health")
@@ -57,6 +54,22 @@ async def proxy_run(run_id: str, action: str, thread_id: str):
         return JSONResponse({'detail': '지원하지 않는 동작'}, status_code=404)
     async with httpx.AsyncClient(timeout=None) as client:
         response = await client.post(f'{BACKEND}/runs/{run_id}/{action}', params={'thread_id': thread_id})
+    return JSONResponse(response.json(), status_code=response.status_code)
+
+
+@app.api_route('/checklists', methods=['GET', 'POST'])
+async def proxy_checklists(req: Request):
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.request(req.method, f'{BACKEND}/checklists', content=await req.body(),
+                                        headers={'content-type': 'application/json'})
+    return JSONResponse(response.json(), status_code=response.status_code)
+
+
+@app.patch('/checklists/{checklist_id}/items/{item_id}')
+async def proxy_checklist_item(checklist_id: str, item_id: str, req: Request):
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.patch(f'{BACKEND}/checklists/{checklist_id}/items/{item_id}',
+                                      content=await req.body(), headers={'content-type': 'application/json'})
     return JSONResponse(response.json(), status_code=response.status_code)
 
 

@@ -1,9 +1,10 @@
 """원문 근거 단위를 선택하고 설정된 레이아웃으로 보고서를 조립한다."""
 import re
 from datetime import datetime, timedelta, timezone
-from .documents import document_units
+from .documents import document_units, REPORT_ERROR_PREFIX
 from .settings import policy
 from .monitoring import collection_scope
+from .response_policy import concise_status, request_context, report_policy_errors, previous_sample
 
 
 def _cell(value):
@@ -57,18 +58,21 @@ def render_report(report, collected):
     steps = runbook_steps(collected)
     if (not isinstance(report.get('diagnosis'), str) or not isinstance(report.get('action_steps'), list)
             or not isinstance(report.get('check_steps'), list)):
-        return '보고서 구조가 올바르지 않습니다. 원인 후보와 원문 단계 ID를 다시 작성하세요.'
+        return REPORT_ERROR_PREFIX + '보고서 구조가 올바르지 않습니다. 원인 후보와 원문 단계 ID를 다시 작성하세요.'
+    errors = report_policy_errors(report, collected)
+    if errors:
+        return REPORT_ERROR_PREFIX + '\n'.join(errors)
     selected = report['action_steps'] + report['check_steps']
     if any(not isinstance(key, str) or key not in steps for key in selected):
-        return '조회한 대응 매뉴얼에 없는 단계가 선택되었습니다. 제공된 단계 ID만 선택하세요.'
+        return REPORT_ERROR_PREFIX + '조회한 대응 매뉴얼에 없는 단계가 선택되었습니다. 제공된 단계 ID만 선택하세요.'
     if re.search(r'\d+(?:\.\d+)?\s*(?:%|퍼센트|ms|GB|MB)', report['diagnosis'], re.I):
-        return '원인 후보에 정량 수치를 반복하지 마세요. 측정값은 관측 정보에만 표시합니다.'
+        return REPORT_ERROR_PREFIX + '원인 후보에 정량 수치를 반복하지 마세요. 측정값은 관측 정보에만 표시합니다.'
     abnormal = any(c.get('source') == 'monitoring' and
                    c.get('data', {}).get('status') != 'healthy' for c in collected)
     if abnormal and not selected:
-        return '근거가 되는 점검 또는 대응 절차를 하나 이상 선택하세요.'
+        return REPORT_ERROR_PREFIX + '근거가 되는 점검 또는 대응 절차를 하나 이상 선택하세요.'
     if any(len(report[key]) > policy().max_selected_steps for key in ('action_steps', 'check_steps')):
-        return '설정된 최대 근거 단계 수를 초과했습니다.'
+        return REPORT_ERROR_PREFIX + '설정된 최대 근거 단계 수를 초과했습니다.'
     monitors = [c['data'] for c in collected if c.get('source') == 'monitoring' and isinstance(c.get('data'), dict)]
     parts = {'observations': ['| 대상 | 항목 | 측정값 |', '| --- | --- | --- |'] if monitors else [],
         'diagnosis': [_status_summary(monitors), report['diagnosis']], 'actions': [
@@ -106,6 +110,32 @@ def render_report(report, collected):
     samples = [c['data'].get('recent_samples', []) for c in collected if c.get('source') == 'monitoring']
     if any(samples):
         parts['limitations'].append('최근 표본은 요청 시점의 기록입니다. 지속 장애·메모리 누수를 확정할 수 없습니다.')
+    context = request_context(collected)
+    if context.get('reported_symptoms'):
+        if monitors and all(m.get('status') == 'healthy' for m in monitors):
+            parts['diagnosis'][0] = '**판단: 조회한 자원 지표는 정상 범위이나, 보고된 증상은 미확인 상태입니다.**'
+        parts['diagnosis'].append('말씀한 증상의 원인·해소 여부는 조회한 자원 지표만으로 확인할 수 없습니다.')
+    if concise_status(collected):
+        parts['diagnosis'] = ['**판단: 현재 조회한 지표는 정상 범위입니다.**',
+                              '현재 측정값에서 즉시 조치가 필요한 자원 이상은 확인되지 않았습니다.']
+        parts['actions'], parts['sources'] = [], []
+        parts['checks'] = []
+        parts['limitations'] = ['요청 시점의 자원 측정값입니다. 장기 추세와 서비스 전체의 정상 동작까지 확인한 결과는 아닙니다.']
+    if context.get('compare_history'):
+        comparison = ['| 대상 | 항목 | 현재 | 이전 표본 | 변화(%p) |', '| --- | --- | --- | --- | --- |']
+        for data in monitors:
+            previous = previous_sample(data)
+            if not previous:
+                parts['checks'].append(f"- {_cell(data['system_name'])}: 비교할 수 있는 이전 표본이 없습니다.")
+                continue
+            parts['checks'].append(f"- {_cell(data['system_name'])} 이전 표본: {_measured_at(previous.get('last_checked'))}")
+            for metric, label in [('cpu_percent', 'CPU'), ('memory_percent', '메모리'), ('disk_percent', '디스크')]:
+                now, before = data.get(metric), previous.get(metric)
+                if all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in (now, before)):
+                    comparison.append(f"| {_cell(data['system_name'])} | {label} | {now}% | {before}% | {now - before:+.1f} |")
+        if len(comparison) > 2:
+            parts['checks'].extend(comparison)
+        parts['checks'].append('요청 시점의 표본 간 차이이며, 정기 수집 추세나 장애 원인을 의미하지 않습니다.')
     lines = []
     for section in policy().report_sections:
         content = [line for kind in section.content for line in parts[kind] if line.strip()]

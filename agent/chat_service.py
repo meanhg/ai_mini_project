@@ -9,12 +9,16 @@ from langsmith.run_helpers import get_current_run_tree
 from .conversation import compact_history, next_context
 from .fake_llm import resolve_demo_query
 from .settings import policy
+from .checklists import candidates
+from .response_policy import followup_suggestions
 from .supervisor_v1 import run_v1
 
 
 def build_metadata(result: dict, run_id: str | None, backend, state) -> dict:
     return {
         "route": result.get("route"),
+        "followups": followup_suggestions(result),
+        "response_context": result.get("response_context", {}),
         "task_count": len(result.get("tasks", [])),
         "gate_removed": result.get("gate_removed", 0),
         "replan_rounds": result.get("replan_rounds", 0),
@@ -121,6 +125,7 @@ class ChatService:
                 trace = get_current_run_tree()
                 metadata = build_metadata(result, str(trace.id) if trace else None, backend, self.state)
                 metadata['run_id'] = run_id
+                metadata['checklist_candidates'] = candidates(result['final'], metadata)
                 store.finish(run_id, result['final'], metadata, next_context(context, message, result))
                 yield {'type': 'FinalAnswer', 'reply': result['final'], 'sources': result.get('sources', []),
                        'backend': backend, 'metadata': metadata, 'events': result.get('events', []),

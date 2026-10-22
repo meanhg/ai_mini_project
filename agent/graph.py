@@ -27,6 +27,8 @@ from .validation import validate_draft, verified_fallback
 from .settings import policy, runbook_directory
 from .coverage import evidence_gaps
 from .documents import citation_name
+from .response_policy import concise_status
+from .evidence import render_report
 
 
 from .monitoring import known_systems
@@ -64,6 +66,8 @@ class AgentState(TypedDict, total=False):
     evidence_gaps: list[dict]
     evidence_sufficient: bool
     initial_evidence_prepared: bool
+    response_context: dict
+    deterministic_report: bool
 
 
 async def _invoke(fn, *args):
@@ -91,11 +95,15 @@ async def route_node(state: AgentState, deps: SupervisorDeps) -> dict:
         query = interpreted['resolved_request']
         extra = {'query': query, 'targets': interpreted['targets'],
                  'unknown_targets': interpreted['unknown_targets'],
-                 'clarification_text': interpreted['clarification']}
+                 'clarification_text': interpreted['clarification'],
+                 'response_context': {'request_kind': interpreted.get('request_kind', 'diagnostic'),
+                    'reported_symptoms': interpreted.get('reported_symptoms', True),
+                    'compare_history': interpreted.get('compare_history', False)}}
     else:
         result, usage = await _invoke(deps.fast_llm.route, state['query'])
         extra = {'unknown_targets': unknown_systems(state['query']),
-                 'targets': mentioned_systems(state['query'])}
+                 'targets': mentioned_systems(state['query']),
+                 'response_context': result.get('response_context', {})}
     event = {'type': 'RouteDecided', 'route': result['route']}
     return {**extra, 'route': result['route'], 'needs_analysis': result['needs_analysis'],
             **_usage(state, usage), 'events': state.get('events', []) + [event]}
@@ -263,7 +271,7 @@ def _gap_tasks(state, gaps, prefix):
         if gap['kind'] == 'monitoring':
             tasks.append({'id': task_id, 'agent': 'research', 'kind': 'monitoring',
                           'target': target, 'status': 'pending'})
-        elif os.getenv('RAG_ENABLED', 'true').lower() == 'true':
+        elif os.getenv('RAG_ENABLED', 'false').lower() == 'true':
             requested = [q for t in state.get('tasks', []) if t.get('kind') == 'monitoring'
                          and t.get('target') == target for q in t.get('queries', [])]
             query = system_search_text(state['query'], monitors[target], targets, queries=requested)
@@ -331,12 +339,21 @@ async def analysis_node(state: AgentState, deps: SupervisorDeps) -> dict:
 async def write_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """초안은 검증까지 보류하고, 단계별 진행 이벤트만 사용자에게 전달한다."""
     attempt = state.get("validation_attempts", 0) + 1
-    draft, usage = await deps.quality_llm.write(
-        state["query"], state.get("collected", []),
-        attempt, state.get("validation_feedback"),
-        on_token=None)
-    return {"draft": draft, "last_prompt": usage.get("prompt"),
-            **_usage(state, usage),
+    collected = [c for c in state.get('collected', []) if c.get('source') != 'request_context']
+    if state.get('response_context'):
+        collected.append({'source': 'request_context', 'data': state['response_context']})
+    deterministic = concise_status(collected)
+    if deterministic:
+        # 측정값만 표시하는 정상 조회에는 생성 모델을 호출하지 않는다.
+        draft = render_report({'diagnosis': '', 'action_steps': [], 'check_steps': []}, collected)
+        usage = None
+    else:
+        draft, usage = await deps.quality_llm.write(
+            state["query"], collected,
+            attempt, state.get("validation_feedback"), on_token=None)
+    return {"draft": draft, "collected": collected, "deterministic_report": deterministic,
+            "last_prompt": usage.get("prompt") if usage else None,
+            **(_usage(state, usage) if usage else {}),
             "events": state["events"] + [{"type": "DraftWritten", "attempt": attempt,
                                           "length": len(draft)}]}
 
@@ -348,7 +365,12 @@ async def validate_node(state: AgentState, deps: SupervisorDeps) -> dict:
     errors = validate_draft(state["draft"], state.get("collected", []))
     semantic = 'not_run'
     usage = None
-    if not errors and hasattr(deps.quality_llm, 'judge') and os.getenv('SEMANTIC_VALIDATION', 'true').lower() == 'true':
+    if state.get('deterministic_report') and concise_status(state.get('collected', [])):
+        expected = render_report({'diagnosis': '', 'action_steps': [], 'check_steps': []}, state['collected'])
+        if state['draft'] != expected:
+            errors.append('코드가 구성한 정상 조회 결과와 초안이 일치하지 않습니다.')
+        semantic = 'deterministic'
+    elif not errors and hasattr(deps.quality_llm, 'judge') and os.getenv('SEMANTIC_VALIDATION', 'true').lower() == 'true':
         verdict, usage = await deps.quality_llm.judge(state['query'], state.get('collected', []), state['draft'])
         semantic = 'passed' if verdict['supported'] else 'rejected'
         if not verdict['supported']:

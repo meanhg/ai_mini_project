@@ -69,7 +69,8 @@ def main():
         if not args.backend_only:
             children.append(subprocess.Popen([sys.executable, '-m', 'uvicorn', 'web_demo_server:app',
                 '--host', '127.0.0.1', '--port', '8600'], cwd=ROOT, env=env))
-        print(f"기본 모델: {env['LLM_BACKEND']}, 임베딩: {env.get('RAG_EMBEDDING_BACKEND', 'ollama')}", flush=True)
+        manual_mode = 'RAG 검색' if env.get('RAG_ENABLED', 'false').lower() == 'true' else '내부 매뉴얼 직접 조회'
+        print(f"기본 모델: {env['LLM_BACKEND']}, 매뉴얼: {manual_mode}", flush=True)
         print('화면: http://localhost:8600 · API: http://localhost:8100 · 종료: Ctrl+C', flush=True)
         while all(child.poll() is None for child in children):
             time.sleep(0.5)

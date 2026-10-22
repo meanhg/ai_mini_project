@@ -30,6 +30,8 @@ from agent.fake_llm import FastLLM, QualityLLM
 from agent.graph import build_graph
 from agent.mcp_client import MCPClient
 from agent.session_store import SqliteSessionStore
+from agent.checklists import ChecklistStore, candidates
+from agent.checklist_api import router as checklist_router
 
 CREATION_COUNT = 0   # Wave 1 — 프로세스 내 Agent 번들 생성 횟수 (항상 1이어야 정상)
 
@@ -71,6 +73,7 @@ async def lifespan(app: FastAPI):
         backend, fast_llm, quality_llm = _build_llms()
         app.state.llm_backend = backend
         store = SqliteSessionStore()
+        app.state.checklists = ChecklistStore(store)
         stack.callback(store.close)
         deps = SupervisorDeps(fast_llm, quality_llm, mcp, store,
                               os.environ.get("SUPERVISOR_VERSION", "v2"))
@@ -95,6 +98,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(checklist_router)
 
 
 def _get_bundle(backend=None):
@@ -115,8 +119,10 @@ async def health():
             "llm_backend": app.state.llm_backend,
             "fast_llm": app.state.deps.fast_llm.name,
             "quality_llm": app.state.deps.quality_llm.name,
-            "rag_enabled": os.getenv('RAG_ENABLED', 'true').lower() == 'true',
-            "embedding_backend": os.getenv('RAG_EMBEDDING_BACKEND', 'ollama'),
+            "rag_enabled": os.getenv('RAG_ENABLED', 'false').lower() == 'true',
+            "embedding_backend": (os.getenv('RAG_EMBEDDING_BACKEND', 'ollama')
+                if os.getenv('RAG_ENABLED', 'false').lower() == 'true' else None),
+            "runbook_mode": ('rag' if os.getenv('RAG_ENABLED', 'false').lower() == 'true' else 'direct'),
             "backends": {name: {'fast': _get_bundle(name)[1].fast_llm.name,
                                  'quality': _get_bundle(name)[1].quality_llm.name}
                          for name in ['openai', 'ollama', 'fake']}}
@@ -143,6 +149,9 @@ def _run_for_thread(run_id, thread_id):
 async def messages(thread_id: str, before: int | None = None):
     store = app.state.deps.session_store
     items = store.history(thread_id, before=before)
+    for item in items:
+        if item['role'] == 'assistant':
+            item['metadata']['checklist_candidates'] = candidates(item['content'], item['metadata'])
     return {'messages': items, 'next_before': items[0]['id'] if len(items) == 100 else None,
             'pending_runs': [r for r in store.pending(thread_id) if r['status'] != 'discarded']}
 

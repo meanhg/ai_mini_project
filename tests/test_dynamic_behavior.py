@@ -96,7 +96,8 @@ class CoverageTests(unittest.IsolatedAsyncioTestCase):
                  'collected': [monitor('auth-service'), document('auth-service'),
                     {'source': 'retrieval_status', 'system_name': 'auth-service', 'data': [
                         {'query': 'CPU 과부하', 'citations': []}, {'query': '인증서 만료', 'citations': ['RB:tls:1']}]}]}
-        gaps = evidence_gaps(state)
+        with patch.dict(os.environ, {'RAG_ENABLED': 'true'}):
+            gaps = evidence_gaps(state)
         self.assertEqual(len(gaps), 1)
         self.assertEqual(gaps[0]['query'], 'CPU 과부하')
 

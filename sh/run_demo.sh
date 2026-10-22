@@ -7,6 +7,6 @@ if [ ! -x .venv/bin/python ]; then
     exit 1
 fi
 export LLM_BACKEND=fake SUPERVISOR_VERSION=v2
-export RAG_EMBEDDING_BACKEND=local RAG_MIN_SCORE=0
+export RAG_ENABLED=false
 export LANGCHAIN_TRACING_V2=false LANGSMITH_TRACING=false
 exec .venv/bin/python scripts/run_service.py --backend fake "$@"

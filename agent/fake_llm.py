@@ -23,8 +23,13 @@ class FastLLM(FakeLLM):
         """Wave 5 — 쿼리 라우팅. 장애 관련이면 incident 파이프라인, 아니면 chat 직행."""
         incident = bool(re.search(
             r"장애|진단|다운|지연|저하|급증|느려|치솟|메모리|디스크|타임아웃|"
-            r"CPU|모니터링|incident|티켓|latency|timeout|memory|disk", query, re.I))
+            r"CPU|모니터링|표본|측정|상태|incident|티켓|latency|timeout|memory|disk", query, re.I))
         result = {"route": "incident" if incident else "chat", "needs_analysis": False}
+        # 외부 모델 없는 데모에서만 사용하는 간단한 요청 범위 분류.
+        symptoms = bool(re.search(r'느려|지연|오류|장애|급증|계속 증가|누수|OOM|타임아웃', query, re.I))
+        result['response_context'] = {'request_kind': 'status' if not symptoms and re.search(r'상태|측정|표본|사용률', query) else 'diagnostic',
+                                      'reported_symptoms': symptoms,
+                                      'compare_history': bool(re.search(r'이전|표본|기록', query) and re.search(r'비교|차이|변화', query))}
         return result, self._usage(query, str(result))
 
     @traceable(run_type="llm", name="fast_llm.plan")

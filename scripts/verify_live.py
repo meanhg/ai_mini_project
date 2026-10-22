@@ -135,16 +135,17 @@ async def main():
             row['elapsed_seconds'] = round(time.perf_counter() - start, 2)
             results.append(row)
             print(json.dumps(row, ensure_ascii=False), flush=True)
-    try:
-        index = RunbookIndex()
-        matches = await index.search('캐시 프로세스의 힙이 계속 커지고 OOM이 걱정됩니다', 2)
-        row = {'component': 'rag', 'backend': index.embedder.backend, 'model': index.embedder.model,
-               'ok': bool(matches['matches']), 'matches': [d['incident_type'] for d in matches['matches']]}
-    except Exception as error:
-        row = {'component': 'rag', 'ok': False,
-               'error': str(error) if isinstance(error, RuntimeError) else type(error).__name__}
-    results.append(row)
-    print(json.dumps(row, ensure_ascii=False), flush=True)
+    if os.getenv('RAG_ENABLED', 'false').lower() == 'true':
+        try:
+            index = RunbookIndex()
+            matches = await index.search('캐시 프로세스의 힙이 계속 커지고 OOM이 걱정됩니다', 2)
+            row = {'component': 'rag', 'backend': index.embedder.backend, 'model': index.embedder.model,
+                   'ok': bool(matches['matches']), 'matches': [d['incident_type'] for d in matches['matches']]}
+        except Exception as error:
+            row = {'component': 'rag', 'ok': False,
+                   'error': str(error) if isinstance(error, RuntimeError) else type(error).__name__}
+        results.append(row)
+        print(json.dumps(row, ensure_ascii=False), flush=True)
     if args.full or args.local_check:
         # 별도 포트 없이 실제 FastAPI + MCP + 모델 전체를 실행한다.
         import tempfile

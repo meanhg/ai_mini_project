@@ -1,12 +1,39 @@
+# 실제 설정·자격 증명 (공유용 빈 양식은 유지)
 .env
+.env.*
+!.env.example
+
+# 로컬 실행 환경·캐시·로그
 .venv/
-session.db
 __pycache__/
-*.log
-data/rag_index.sqlite3*
-session.db-*
-*.checkpoints.db*
-data/monitoring_history.sqlite3*
-.DS_Store
-*.pyc
+*.py[cod]
 .pytest_cache/
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# 대화·체크포인트·측정·검색 DB 및 부속 파일
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3*
+
+# 과거 설명 문서·화면 캡처·발표 산출물 (로컬 보관)
+/doc/
+/presentation/
+/eval/*.md
+/AI-Mini-Project_20261004_2.pdf
+
+# 현재 화면에서 사용하지 않는 이전 로고
+/Opsidian.svg
+/Skalagent.svg
+
+# 평가 입력은 유지하고 실행 결과만 제외
+/eval/*_results.json
+/eval/*_verification.json
+/eval/response_check*.json
+
+# 배포 압축본
+*.zip

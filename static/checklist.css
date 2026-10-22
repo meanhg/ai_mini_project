@@ -1,0 +1,46 @@
+.agent-response { min-width: 0; max-width: 88%; }
+.agent-response .bubble { max-width: 100%; }
+.save-checklist { margin-top: 8px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--link); font-size: 11px; }
+.save-checklist:hover { border-color: var(--accent); }
+.checklist-chat-notice { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; font-size: 12px; color: var(--link); }
+.checklist-chat-notice button { background: transparent; color: var(--link); text-decoration: underline; }
+.checklist-workspace { overflow: hidden; }
+.checklist-panel { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding-bottom: 2px; }
+.checklist-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.checklist-heading h1 { font-size: 22px; }
+.checklist-heading p, .checklist-group header p { color: var(--muted); font-size: 12px; line-height: 1.7; margin: 7px 0 0; }
+.checklist-disclaimer { background: var(--paper); border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; font-size: 12px; line-height: 1.8; color: var(--muted); margin: 0; }
+.checklist-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--muted); }
+.checklist-toolbar label { display: flex; align-items: center; gap: 8px; }
+.checklist-toolbar select, .checklist-item-heading select { border: 1px solid var(--line); border-radius: 6px; padding: 8px; max-width: none; }
+.checklist-empty { padding: 36px 20px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; color: var(--muted); font-size: 12px; line-height: 1.8; }
+.checklist-empty h2 { font-size: 16px; color: var(--ink); }
+.checklist-group { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+.checklist-group header { margin-bottom: 12px; }
+.checklist-group h2 { font-size: 15px; line-height: 1.7; margin: 0; overflow-wrap: anywhere; }
+.checklist-group progress { display: block; width: 100%; height: 6px; margin-top: 12px; accent-color: var(--accent); }
+.checklist-item { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 15px; margin-top: 10px; }
+.checklist-item-heading { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 11px; }
+.checklist-target { font-weight: 600; color: var(--ink); }
+.checklist-status { color: var(--link); background: var(--bg); font: inherit; }
+.checklist-unsaved, .checklist-updated { font-size: 10px; color: var(--muted); }
+.checklist-task { font-size: 13px; line-height: 1.85; margin: 10px 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.checklist-edit { display: flex; align-items: flex-end; gap: 12px; margin-top: 14px; }
+.checklist-edit label { display: flex; flex-direction: column; gap: 7px; font-size: 11px; color: var(--muted); }
+.checklist-edit .checklist-note { flex: 1; min-width: 0; }
+.checklist-edit textarea { width: 100%; resize: vertical; min-height: 58px; border: 1px solid var(--line); border-radius: 6px; padding: 9px; color: var(--ink); background: var(--bg); font: inherit; font-size: 12px; line-height: 1.6; }
+.checklist-save, .checklist-secondary { padding: 9px 13px; border-radius: 7px; white-space: nowrap; font-size: 12px; }
+.checklist-save { background: var(--accent); color: var(--on-accent); }
+.checklist-secondary { background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+.checklist-error { color: #b42332; font-size: 12px; line-height: 1.7; }
+.checklist-notice { color: var(--link); font-size: 12px; }
+.mobile-view-switch { display: none; background: transparent; color: var(--link); padding: 4px; font-size: 11px; white-space: nowrap; }
+@media (max-width:640px) {
+  .mobile-view-switch { display: inline-flex; }
+  .checklist-heading h1 { font-size: 18px; }
+  .checklist-group { padding: 12px; }
+  .checklist-item { padding: 12px; }
+  .checklist-edit { flex-direction: column; align-items: stretch; }
+  .checklist-heading p { font-size: 11px; }
+  .agent-response { max-width: 94%; }
+}
